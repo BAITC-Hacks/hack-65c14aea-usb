@@ -2,7 +2,7 @@
 import { mount, flushPromises } from '@vue/test-utils'
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 import App from '../src/App.vue'
-const options = { cities: ['Алматы'], categories: ['Фотограф'], event_formats: ['свадьба'], languages: ['русский'] }
+const options = { cities: ['Алматы', 'Астана', 'Зарубежье'], categories: ['Фотограф', 'Флорист'], event_formats: ['свадьба'], languages: ['русский'] }
 const readiness = { status: 'ready', dependencies: { catalog: true, cache: true } }
 const meta = { eligible_count: 2, total_in_city_category: 3, exclusions: { busy: 1, over_budget: 0, wrong_format: 0, wrong_language: 0, insufficient_duration: 0 } }
 const items = [
@@ -27,10 +27,32 @@ describe('recommendations interface', () => {
   expect(fetch).toHaveBeenNthCalledWith(1, '/api/v1/catalog/options', expect.any(Object))
   const request = vi.mocked(fetch).mock.calls[2]
   expect(request?.[0]).toBe('/api/v1/recommendations')
-  expect(JSON.parse(request?.[1]?.body as string)).toEqual({ city: 'Алматы', category: 'Фотограф', event_format: 'свадьба', event_date: '2026-11-14', budget_kzt: 1000000 })
+  expect(JSON.parse(request?.[1]?.body as string)).toEqual({ city: 'Алматы', category: 'Фотограф', event_format: 'свадьба', event_date: '2026-10-10', budget_kzt: 6000000 })
   expect(wrapper.findAll('.contractor-card h3').map(node => node.text())).toEqual(['Первый', 'Второй'])
   expect(wrapper.text()).toContain('Синтетический профиль')
-  expect(wrapper.text()).toContain('Свободен на выбранную дату.')
+ expect(wrapper.text()).toContain('Свободен на выбранную дату.')
+ })
+ it('selects a city on the interactive map and sends it to the backend', async () => {
+  vi.mocked(fetch).mockResolvedValueOnce(respond({ status: 'matched', items, meta, message: 'Найдено.' }))
+  await start()
+  const astana = wrapper.findAll('.city-marker').find(marker => marker.text().includes('Астана'))
+  expect(astana).toBeTruthy()
+  await astana!.trigger('click')
+  await flushPromises()
+  const request = vi.mocked(fetch).mock.calls[2]
+  expect(JSON.parse(request?.[1]?.body as string).city).toBe('Астана')
+  expect((wrapper.get('#city').element as HTMLSelectElement).value).toBe('Астана')
+ })
+ it('runs the no-result Definition of Done scenario with real request parameters', async () => {
+  vi.mocked(fetch).mockResolvedValueOnce(respond({ status: 'no_eligible_candidates', items: [], meta, message: 'Бюджет не прошёл.' }))
+  await start()
+  const scenario = wrapper.findAll('.scenario-button').find(button => button.text().includes('Без результата'))
+  expect(scenario).toBeTruthy()
+  await scenario!.trigger('click')
+  await flushPromises()
+  const request = JSON.parse(vi.mocked(fetch).mock.calls[2]?.[1]?.body as string)
+  expect(request).toEqual({ city: 'Алматы', event_date: '2026-10-10', event_format: 'свадьба', category: 'Фотограф', budget_kzt: 1 })
+  expect(wrapper.text()).toContain('На эти условия пока нет совпадений')
  })
  it.each(['category_not_found', 'no_eligible_candidates'])('renders the %s business outcome', async status => {
   vi.mocked(fetch).mockResolvedValueOnce(respond({ status, items: [], meta, message: 'Нет подходящих профилей.' }))
