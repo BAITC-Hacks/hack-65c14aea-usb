@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     )
 
     app_name: str = "Smart Contractor Match"
-    app_version: str = "0.2.0"
+    app_version: str = "0.3.0"
     app_host: str = "0.0.0.0"
     app_port: int = 8000
     frontend_origin: str = "http://localhost:5173"
@@ -25,6 +25,13 @@ class Settings(BaseSettings):
     elasticsearch_index: str = "contractors-v1"
     elasticsearch_request_timeout: float = 4.0
     max_candidates: int = 500
+    embedding_model: str = (
+        "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    )
+    embedding_dimensions: int = 384
+    embedding_cache_dir: str = "/opt/fastembed-cache"
+    semantic_search_weight: float = 0.7
+    lexical_search_weight: float = 0.3
 
     @property
     def cors_origins(self) -> list[str]:

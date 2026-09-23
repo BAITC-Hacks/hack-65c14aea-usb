@@ -36,3 +36,9 @@ def test_index_uses_one_shard_and_russian_analyzer() -> None:
     definition = index_definition()
     assert definition["settings"]["number_of_shards"] == 1
     assert definition["mappings"]["properties"]["description"]["analyzer"] == "russian"
+    embedding = definition["mappings"]["properties"]["profile_embedding"]
+    assert embedding == {
+        "type": "dense_vector",
+        "dims": 384,
+        "index": False,
+    }

@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any
 
 from elasticsearch import AsyncElasticsearch
@@ -7,12 +8,20 @@ from app.core.text import normalize_text
 from app.repositories.base import RepositoryUnavailableError
 from app.schemas.contractor import Contractor
 from app.schemas.recommendation import CatalogOptions
+from app.services.embeddings import EmbeddingService
 
 
 class ElasticsearchContractorRepository:
-    def __init__(self, settings: Settings) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        embedding_service: EmbeddingService | None = None,
+    ) -> None:
         self._index = settings.elasticsearch_index
         self._max_candidates = settings.max_candidates
+        self._semantic_weight = settings.semantic_search_weight
+        self._lexical_weight = settings.lexical_search_weight
+        self._embeddings = embedding_service or EmbeddingService(settings)
         self._client = AsyncElasticsearch(
             settings.elasticsearch_url,
             request_timeout=settings.elasticsearch_request_timeout,
@@ -26,7 +35,12 @@ class ElasticsearchContractorRepository:
         category: str,
         search_text: str | None = None,
     ) -> list[Contractor]:
-        query = {
+        semantic_text = search_text or category
+        query_vector = await asyncio.to_thread(
+            self._embeddings.embed_query,
+            semantic_text,
+        )
+        filtered_query: dict[str, Any] = {
             "bool": {
                 "filter": [
                     {"term": {"city.normalized": normalize_text(city)}},
@@ -35,24 +49,64 @@ class ElasticsearchContractorRepository:
             }
         }
         if search_text:
-            query["bool"]["should"] = [
+            filtered_query["bool"]["should"] = [
                 {"match": {"description": {"query": search_text, "boost": 1.0}}}
             ]
+        query = {
+            "script_score": {
+                "query": filtered_query,
+                "script": {
+                    "source": (
+                        "double semantic = "
+                        "(cosineSimilarity(params.query_vector, "
+                        "'profile_embedding') + 1.0) / 2.0; "
+                        "double lexical = Math.min(_score / 8.0, 1.0); "
+                        "return Math.max(0.000001, "
+                        "params.semantic_weight * semantic + "
+                        "params.lexical_weight * lexical);"
+                    ),
+                    "params": {
+                        "query_vector": query_vector,
+                        "semantic_weight": self._semantic_weight,
+                        "lexical_weight": self._lexical_weight,
+                    },
+                },
+            }
+        }
         try:
             response = await self._client.search(
                 index=self._index,
                 query=query,
                 size=self._max_candidates,
             )
-            contractors: list[Contractor] = []
+            parsed: list[Contractor] = []
             for hit in response["hits"]["hits"]:
-                contractor = Contractor.model_validate(hit["_source"])
-                contractors.append(
+                source = dict(hit["_source"])
+                source.pop("profile_embedding", None)
+                contractor = Contractor.model_validate(source)
+                parsed.append(
                     contractor.model_copy(
                         update={"search_relevance": float(hit.get("_score") or 0)}
                     )
                 )
-            return contractors
+            evidence = await asyncio.to_thread(
+                self._embeddings.best_evidence_batch,
+                [contractor.description for contractor in parsed],
+                query_vector,
+            )
+            return [
+                contractor.model_copy(
+                    update={
+                        "semantic_relevance": relevance,
+                        "semantic_evidence": sentence,
+                    }
+                )
+                for contractor, (relevance, sentence) in zip(
+                    parsed,
+                    evidence,
+                    strict=True,
+                )
+            ]
         except Exception as exc:
             raise RepositoryUnavailableError("Elasticsearch search failed") from exc
 
@@ -93,4 +147,3 @@ class ElasticsearchContractorRepository:
 
 def _bucket_keys(aggregation: dict[str, Any]) -> list[str]:
     return sorted(str(bucket["key"]) for bucket in aggregation["buckets"])
-

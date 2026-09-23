@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from app.core.config import get_settings
 from app.database.models import Base, ContractorRow
 from app.schemas.contractor import Contractor
+from app.services.embeddings import EmbeddingService
 from scripts.index_dataset import index_contractors
 
 
@@ -34,7 +35,11 @@ def read_csv_dataset(path: Path) -> list[Contractor]:
     ids: set[str] = set()
     with path.open("r", encoding="utf-8-sig", newline="") as source:
         reader = csv.DictReader(source)
-        required = set(Contractor.model_fields) - {"search_relevance"}
+        required = set(Contractor.model_fields) - {
+            "search_relevance",
+            "semantic_relevance",
+            "semantic_evidence",
+        }
         missing = required - set(reader.fieldnames or [])
         if missing:
             raise ValueError(f"CSV is missing columns: {', '.join(sorted(missing))}")
@@ -104,6 +109,7 @@ async def main() -> None:
     args = parse_args()
     settings = get_settings()
     contractors = read_csv_dataset(args.dataset)
+    embedding_service = EmbeddingService(settings)
     await sync_postgres(contractors, settings.database_url)
 
     elasticsearch = AsyncElasticsearch(
@@ -117,6 +123,7 @@ async def main() -> None:
             settings.elasticsearch_index,
             contractors,
             recreate=True,
+            embedding_service=embedding_service,
         )
         await redis.flushdb()
     finally:

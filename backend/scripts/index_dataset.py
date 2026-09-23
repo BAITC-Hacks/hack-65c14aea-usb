@@ -9,6 +9,7 @@ from pydantic import ValidationError
 
 from app.core.config import get_settings
 from app.schemas.contractor import Contractor
+from app.services.embeddings import EmbeddingService, contractor_embedding_text
 
 
 def parse_args() -> argparse.Namespace:
@@ -48,7 +49,7 @@ def read_dataset(path: Path) -> list[Contractor]:
     return contractors
 
 
-def index_definition() -> dict[str, Any]:
+def index_definition(embedding_dimensions: int = 384) -> dict[str, Any]:
     normalized_field = {
         "type": "keyword",
         "fields": {"normalized": {"type": "keyword", "normalizer": "folded"}},
@@ -81,6 +82,11 @@ def index_definition() -> dict[str, Any]:
                 "synthetic": {"type": "boolean"},
                 "city_imputed": {"type": "boolean"},
                 "price_imputed": {"type": "boolean"},
+                "profile_embedding": {
+                    "type": "dense_vector",
+                    "dims": embedding_dimensions,
+                    "index": False,
+                },
             },
         },
     }
@@ -91,24 +97,34 @@ async def index_contractors(
     index_name: str,
     contractors: list[Contractor],
     recreate: bool,
+    embedding_service: EmbeddingService,
 ) -> None:
     exists = await client.indices.exists(index=index_name)
     if exists and recreate:
         await client.indices.delete(index=index_name)
         exists = False
     if not exists:
-        definition = index_definition()
+        definition = index_definition(embedding_service.dimensions)
         await client.indices.create(
             index=index_name,
             settings=definition["settings"],
             mappings=definition["mappings"],
         )
 
+    embeddings = embedding_service.embed_documents(
+        [contractor_embedding_text(contractor) for contractor in contractors]
+    )
     operations: list[dict[str, Any]] = []
-    for contractor in contractors:
+    for contractor, embedding in zip(contractors, embeddings, strict=True):
         operations.append({"index": {"_index": index_name, "_id": contractor.id}})
-        operations.append(contractor.model_dump(mode="json"))
-    response = await client.bulk(operations=operations, refresh="wait_for")
+        document = contractor.model_dump(mode="json")
+        document["profile_embedding"] = embedding
+        operations.append(document)
+    response = await client.bulk(
+        operations=operations,
+        refresh="wait_for",
+        request_timeout=30,
+    )
     if response.get("errors"):
         failures = [
             item for item in response["items"] if item["index"].get("error")
@@ -120,6 +136,7 @@ async def main() -> None:
     args = parse_args()
     settings = get_settings()
     contractors = read_dataset(args.dataset)
+    embedding_service = EmbeddingService(settings)
     client = AsyncElasticsearch(
         settings.elasticsearch_url,
         request_timeout=settings.elasticsearch_request_timeout,
@@ -130,6 +147,7 @@ async def main() -> None:
             settings.elasticsearch_index,
             contractors,
             args.recreate,
+            embedding_service,
         )
     finally:
         await client.close()

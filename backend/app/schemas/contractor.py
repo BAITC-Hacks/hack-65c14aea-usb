@@ -22,6 +22,8 @@ class Contractor(BaseModel):
     city_imputed: bool = False
     price_imputed: bool = False
     search_relevance: float = Field(default=0, ge=0, exclude=True)
+    semantic_relevance: float = Field(default=0, ge=0, le=1, exclude=True)
+    semantic_evidence: str | None = Field(default=None, exclude=True)
 
     @field_validator("categories", "event_formats", "languages")
     @classmethod

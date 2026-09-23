@@ -149,3 +149,35 @@ async def test_description_relevance_affects_ranking(contractors) -> None:
     response = await RecommendationService(repository).recommend(request_for())
 
     assert [item.id for item in response.items[:2]] == ["photo-b", "photo-a"]
+
+
+@pytest.mark.asyncio
+async def test_semantic_relevance_affects_ranking_and_explanation(contractors) -> None:
+    candidates = [
+        contractors[0].model_copy(
+            update={
+                "id": "semantic-low",
+                "price_from_kzt": 100_000,
+                "busy_dates": [],
+                "search_relevance": 0.0,
+                "semantic_relevance": 0.2,
+                "semantic_evidence": "Снимает классические постановочные портреты.",
+            }
+        ),
+        contractors[1].model_copy(
+            update={
+                "id": "semantic-high",
+                "price_from_kzt": 100_000,
+                "busy_dates": [],
+                "search_relevance": 0.0,
+                "semantic_relevance": 0.95,
+                "semantic_evidence": "Ловит живые эмоции свадебного дня.",
+            }
+        ),
+    ]
+    response = await RecommendationService(
+        MemoryContractorRepository(candidates)
+    ).recommend(request_for())
+
+    assert response.items[0].id == "semantic-high"
+    assert "Ловит живые эмоции свадебного дня" in response.items[0].explanation

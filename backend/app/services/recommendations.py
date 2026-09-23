@@ -66,16 +66,20 @@ class RecommendationService:
                 setattr(exclusions, reason.value, getattr(exclusions, reason.value) + 1)
             if not reasons:
                 lexical_relevance, evidence = description_relevance(contractor, request)
-                es_relevance = contractor.search_relevance / (1 + contractor.search_relevance)
+                hybrid_relevance = min(max(contractor.search_relevance, 0.0), 1.0)
                 eligible.append(
                     RankedCandidate(
                         contractor=contractor,
                         score=score_candidate(
                             contractor,
                             request,
-                            max(lexical_relevance, es_relevance),
+                            max(
+                                lexical_relevance,
+                                hybrid_relevance,
+                                contractor.semantic_relevance,
+                            ),
                         ),
-                        description_evidence=evidence,
+                        description_evidence=contractor.semantic_evidence or evidence,
                     )
                 )
 

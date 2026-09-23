@@ -7,9 +7,15 @@ x-app-environment: &app-environment
   ELASTICSEARCH_URL: http://elasticsearch:9200
   ELASTICSEARCH_INDEX: contractors-v1
   FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
+  EMBEDDING_MODEL: ${EMBEDDING_MODEL:-sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2}
+  EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-384}
+  EMBEDDING_CACHE_DIR: /opt/fastembed-cache
+  SEMANTIC_SEARCH_WEIGHT: ${SEMANTIC_SEARCH_WEIGHT:-0.7}
+  LEXICAL_SEARCH_WEIGHT: ${LEXICAL_SEARCH_WEIGHT:-0.3}
 
 services:
   api:
+    image: contractor-match-backend:local
     build:
       context: .
     environment: *app-environment
@@ -31,8 +37,7 @@ services:
       retries: 6
 
   importer:
-    build:
-      context: .
+    image: contractor-match-backend:local
     command:
       - python
       - -m

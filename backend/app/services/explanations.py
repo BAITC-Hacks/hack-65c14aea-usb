@@ -89,10 +89,22 @@ def build_explanation(
                 f"что покрывает запрос на {format_hours(request.duration_hours)}"
             )
     if description_evidence:
-        factors.append(f"в описании указано: «{description_evidence.rstrip('.!?')}»")
+        factors.append(f"в профиле указано: «{description_evidence.rstrip('.!?')}»")
+    else:
+        factors.append(profile_fallback_fact(contractor))
 
     second_sentence = "; ".join(factors)
     return first_sentence + " " + second_sentence[0].upper() + second_sentence[1:] + "."
+
+
+def profile_fallback_fact(contractor: Contractor) -> str:
+    languages = ", ".join(contractor.languages)
+    if contractor.max_hours is not None:
+        return (
+            f"профиль работает на языках: {languages}, "
+            f"и доступен до {format_hours(contractor.max_hours)}"
+        )
+    return f"профиль работает на языках: {languages}"
 
 
 def format_date(value: date) -> str:
