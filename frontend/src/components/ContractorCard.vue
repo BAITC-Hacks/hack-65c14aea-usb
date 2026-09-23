@@ -1,14 +1,23 @@
 <script setup lang="ts">
-import { BadgeCheck, CircleCheck, MapPin, Sparkles, WalletCards } from 'lucide-vue-next'
+import { ArrowUpRight, BadgeCheck, CircleCheck, MapPin, Sparkles, WalletCards } from 'lucide-vue-next'
 import type { Contractor } from '@/types/api'
 
 defineProps<{ contractor: Contractor; index: number }>()
+const emit = defineEmits<{ open: [] }>()
 
 const money = (value: number) => new Intl.NumberFormat('ru-RU').format(value)
 </script>
 
 <template>
-  <article class="contractor-card">
+  <article
+    class="contractor-card"
+    role="button"
+    tabindex="0"
+    :aria-label="`Открыть профиль подрядчика ${contractor.name}`"
+    @click="emit('open')"
+    @keydown.enter="emit('open')"
+    @keydown.space.prevent="emit('open')"
+  >
     <div class="card-header">
       <span class="rank">0{{ index + 1 }}</span>
       <span v-if="contractor.synthetic" class="source-badge source-badge--synthetic">
@@ -37,6 +46,11 @@ const money = (value: number) => new Intl.NumberFormat('ru-RU').format(value)
       <span><CircleCheck :size="16" /> Почему этот профиль здесь</span>
       <p>{{ contractor.explanation }}</p>
     </div>
+
+    <div class="open-profile">
+      <span>Открыть профиль</span>
+      <ArrowUpRight :size="15" />
+    </div>
   </article>
 </template>
 
@@ -52,12 +66,19 @@ const money = (value: number) => new Intl.NumberFormat('ru-RU').format(value)
   background: #fff;
   box-shadow: 0 14px 38px rgb(26 36 62 / 5%);
   transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  cursor: pointer;
+  outline: none;
 }
 
 .contractor-card:hover {
   border-color: #cbd3e1;
   box-shadow: 0 20px 48px rgb(26 36 62 / 9%);
   transform: translateY(-3px);
+}
+
+.contractor-card:focus-visible {
+  border-color: #647895;
+  box-shadow: 0 0 0 4px rgb(80 98 126 / 12%), 0 20px 48px rgb(26 36 62 / 9%);
 }
 
 .card-header {
@@ -193,6 +214,17 @@ h3 {
   font-size: 11px;
   line-height: 1.62;
   white-space: pre-line;
+}
+
+.open-profile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 14px;
+  color: #405675;
+  font-size: 10px;
+  font-weight: 800;
 }
 
 @media (prefers-reduced-motion: reduce) {

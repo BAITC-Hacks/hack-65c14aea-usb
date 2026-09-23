@@ -25,10 +25,11 @@ import {
 
 import { Button } from '@/components/ui/button'
 import ContractorCard from '@/components/ContractorCard.vue'
+import ContractorDetail from '@/components/ContractorDetail.vue'
 import KazakhstanMap from '@/components/KazakhstanMap.vue'
 import { getBackendReadiness, getCatalogOptions } from '@/api/client'
 import { useRecommendations } from '@/composables/useRecommendations'
-import type { CatalogOptions, RecommendationRequest } from '@/types/api'
+import type { CatalogOptions, Contractor, RecommendationRequest } from '@/types/api'
 
 interface DemoScenario {
   title: string
@@ -42,6 +43,8 @@ const optionsLoading = ref(true)
 const optionsError = ref('')
 const backendState = ref<'checking' | 'ready' | 'degraded' | 'offline'>('checking')
 const validation = ref('')
+const selectedContractor = ref<Contractor | null>(null)
+const selectedRank = ref(1)
 
 const form = reactive({
   city: '',
@@ -212,7 +215,15 @@ async function runSearch(payload: RecommendationRequest, shouldScroll = true) {
 
 function submit() {
   const payload = createPayload()
-  if (payload) void runSearch(payload)
+  if (payload) {
+    selectedContractor.value = null
+    void runSearch(payload)
+  }
+}
+
+function openContractor(contractor: Contractor, index: number) {
+  selectedContractor.value = contractor
+  selectedRank.value = index + 1
 }
 
 async function selectCity(city: string) {
@@ -263,7 +274,6 @@ onMounted(async () => {
       <nav aria-label="Навигация по странице">
         <a href="#search">Подбор</a>
         <a href="#map">Города</a>
-        <a href="#method">Как это работает</a>
       </nav>
 
       <span class="api-status" :class="`api-status--${backendState}`" :title="backendStatus.title">
@@ -478,6 +488,7 @@ onMounted(async () => {
               :key="contractor.id"
               :contractor="contractor"
               :index="index"
+              @open="openContractor(contractor, index)"
             />
           </div>
           <div class="date-comparison">
@@ -522,21 +533,6 @@ onMounted(async () => {
         </div>
       </section>
 
-      <section id="method" class="method-section">
-        <div class="section-heading">
-          <div>
-            <span class="section-index">04 · Под капотом</span>
-            <h2>Что происходит после нажатия</h2>
-            <p>Логику можно объяснить жюри за одну минуту.</p>
-          </div>
-        </div>
-        <ol class="method-grid">
-          <li><span>01</span><strong>Жёсткие фильтры</strong><p>Город, категория, дата, бюджет, формат, язык и длительность.</p></li>
-          <li><span>02</span><strong>Гибридная релевантность</strong><p>Локальные multilingual embeddings и BM25 учитывают смысл описания.</p></li>
-          <li><span>03</span><strong>Стабильный рейтинг</strong><p>Бизнес-скоринг и ID как tie-break сохраняют детерминированный порядок.</p></li>
-          <li><span>04</span><strong>Проверяемое объяснение</strong><p>Только бюджет, формат, язык, длительность и факты конкретного профиля.</p></li>
-        </ol>
-      </section>
     </main>
 
     <footer class="site-footer">
@@ -544,5 +540,13 @@ onMounted(async () => {
       <span>Хакатон #79-lite · 66 анонимных профилей</span>
       <span>Календарь 23.09—31.12.2026</span>
     </footer>
+
+    <ContractorDetail
+      v-if="selectedContractor"
+      :contractor="selectedContractor"
+      :request="submitted"
+      :rank="selectedRank"
+      @close="selectedContractor = null"
+    />
   </div>
 </template>
