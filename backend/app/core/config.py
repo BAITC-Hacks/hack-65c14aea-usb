@@ -11,10 +11,15 @@ class Settings(BaseSettings):
     )
 
     app_name: str = "Smart Contractor Match"
-    app_version: str = "0.1.0"
+    app_version: str = "0.2.0"
     app_host: str = "0.0.0.0"
     app_port: int = 8000
     frontend_origin: str = "http://localhost:5173"
+    database_url: str = (
+        "postgresql+asyncpg://contractors:contractors@localhost:5432/contractors"
+    )
+    redis_url: str = "redis://localhost:6379/0"
+    cache_ttl_seconds: int = 300
     elasticsearch_url: str = "http://localhost:9200"
     elasticsearch_index: str = "contractors-v1"
     elasticsearch_request_timeout: float = 5.0

@@ -50,7 +50,13 @@ def test_health_and_readiness(repository) -> None:
         ready = client.get("/ready")
 
     assert ready.status_code == 200
-    assert ready.json() == {"status": "ready"}
+    assert ready.json() == {
+        "status": "ready",
+        "dependencies": {
+            "catalog": True,
+            "cache": True,
+        },
+    }
 
 
 def test_catalog_options(repository) -> None:

@@ -1,20 +1,24 @@
 # Данные
 
-Для боевого запуска положите выданный организаторами файл сюда под именем:
+Основной файл организаторов уже размещён здесь:
 
-`hackathon-dataset-anonymized.jsonl`
+`hackathon-dataset-anonymized.csv`
 
-Файл `sample-contractors.jsonl` содержит только шесть демонстрационных профилей. Все они намеренно помечены `synthetic: true` и не заменяют основной датасет из 66 записей.
+В нём 66 уникальных профилей, из них 13 помечены `synthetic=true`. Контрольная сумма SHA-256:
 
-Импорт основного набора:
+`6a724b6b7dfb5973343e68ba18dadb60fc807d87e3d78f03ee86fb26cb089f7d`
+
+При `docker compose up` сервис `importer` автоматически:
+
+1. проверяет структуру и значения CSV через Pydantic;
+2. синхронизирует таблицу `contractors` в PostgreSQL;
+3. пересоздаёт индекс Elasticsearch;
+4. очищает Redis-кэш рекомендаций.
+
+Ручной повторный импорт:
 
 ```bash
-python -m scripts.index_dataset --recreate
+docker compose run --rm importer
 ```
 
-Импорт демонстрационного набора:
-
-```bash
-python -m scripts.index_dataset data/sample-contractors.jsonl --recreate
-```
-
+Файл `sample-contractors.jsonl` оставлен только для изолированных unit-тестов старого индексатора и не используется Docker-цепочкой.

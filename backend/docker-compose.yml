@@ -1,29 +1,81 @@
 name: contractor-match-backend
 
+x-app-environment: &app-environment
+  DATABASE_URL: postgresql+asyncpg://contractors:contractors@postgres:5432/contractors
+  REDIS_URL: redis://redis:6379/0
+  CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-300}
+  ELASTICSEARCH_URL: http://elasticsearch:9200
+  ELASTICSEARCH_INDEX: contractors-v1
+  FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
+
 services:
   api:
     build:
       context: .
-    environment:
-      ELASTICSEARCH_URL: http://elasticsearch:9200
-      ELASTICSEARCH_INDEX: contractors-v1
-      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
+    environment: *app-environment
     ports:
       - "${API_PORT:-8000}:8000"
     volumes:
       - ./data:/app/data:ro
     depends_on:
-      elasticsearch:
-        condition: service_healthy
+      importer:
+        condition: service_completed_successfully
     healthcheck:
       test:
         - CMD
         - python
         - -c
-        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready')"
       interval: 10s
       timeout: 5s
       retries: 6
+
+  importer:
+    build:
+      context: .
+    command:
+      - python
+      - -m
+      - scripts.import_dataset
+      - data/hackathon-dataset-anonymized.csv
+    environment: *app-environment
+    volumes:
+      - ./data:/app/data:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    restart: "no"
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: contractors
+      POSTGRES_USER: contractors
+      POSTGRES_PASSWORD: contractors
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U contractors -d contractors"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save "" --appendonly no
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.17.2
@@ -32,7 +84,7 @@ services:
       xpack.security.enabled: "false"
       ES_JAVA_OPTS: -Xms512m -Xmx512m
     ports:
-      - "9200:9200"
+      - "${ELASTICSEARCH_PORT:-9200}:9200"
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
     healthcheck:
@@ -42,5 +94,6 @@ services:
       retries: 12
 
 volumes:
+  postgres-data:
   elasticsearch-data:
 

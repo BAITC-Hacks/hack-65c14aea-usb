@@ -1,10 +1,11 @@
 # Backend
 
-Backend проекта на Python 3.12+, FastAPI, Pydantic v2 и Elasticsearch 8.x.
+Backend проекта на Python 3.12+, FastAPI, PostgreSQL 16, Elasticsearch 8.x и Redis 7.
 
 ## Ответственность
 
-- импорт и валидация JSONL-датасета;
+- импорт и валидация CSV-датасета;
+- хранение нормализованного каталога в PostgreSQL;
 - поиск по городу и категории;
 - исключение занятых на выбранную дату кандидатов;
 - фильтрация по бюджету, формату, языку и длительности;
@@ -21,12 +22,13 @@ backend/
 ├── app/
 │   ├── api/             # FastAPI-маршруты
 │   ├── core/            # конфигурация и логирование
+│   ├── database/        # SQLAlchemy-модели PostgreSQL
 │   ├── models/          # доменные модели
-│   ├── repositories/    # запросы к Elasticsearch
+│   ├── repositories/    # PostgreSQL + Elasticsearch
 │   ├── schemas/         # Pydantic-схемы
-│   └── services/        # фильтрация, скоринг, объяснения
-├── data/                # исходный JSONL
-├── scripts/             # индекс и импорт данных
+│   └── services/        # фильтрация, скоринг, объяснения и кэш
+├── data/                # исходный CSV
+├── scripts/             # синхронизация PostgreSQL и Elasticsearch
 └── tests/               # unit- и integration-тесты
 ```
 
@@ -59,7 +61,7 @@ backend/
 Дополнительные маршруты:
 
 - `GET /health` — процесс API работает;
-- `GET /ready` — Elasticsearch и индекс доступны;
+- `GET /ready` — PostgreSQL, Elasticsearch и Redis доступны;
 - `GET /api/v1/catalog/options` — значения для полей формы.
 
 ## Пайплайн рекомендации
@@ -73,7 +75,15 @@ backend/
 
 LLM может переформулировать проверенные факты, но не выбирает кандидатов и не придумывает причины. Без внешнего AI API используется детерминированный шаблонный fallback.
 
-## Elasticsearch
+## Хранилища
+
+- **PostgreSQL** — источник истины для каталога и значений формы.
+- **Elasticsearch** — индекс кандидатов, фильтрация и BM25-поиск.
+- **Redis** — кэш полного ответа рекомендации по каноническому ключу запроса; TTL по умолчанию 300 секунд. При недоступности Redis API продолжает работать без кэша.
+
+Импортёр валидирует CSV через Pydantic, одним запуском синхронизирует PostgreSQL, полностью пересоздаёт индекс Elasticsearch и очищает устаревший кэш.
+
+### Elasticsearch
 
 - `id`, `city`, `categories`, `event_formats`, `languages`, `busy_dates` — `keyword`;
 - `price_from_kzt` — `long`;
@@ -85,51 +95,57 @@ LLM может переформулировать проверенные фак�
 
 ## Локальный запуск
 
-### Весь backend через Docker Compose
+### Весь backend одной командой
 
 ```bash
 cd backend
 cp .env.example .env
 docker compose up -d --build
-docker compose run --rm api \
-  python -m scripts.index_dataset data/sample-contractors.jsonl --recreate
 ```
 
-После получения основного файла замените последнюю команду на:
+Цепочка запуска в Compose:
 
-```bash
-docker compose run --rm api python -m scripts.index_dataset --recreate
-```
+1. PostgreSQL, Redis и Elasticsearch проходят healthcheck.
+2. Одноразовый `importer` создаёт таблицу и загружает `data/hackathon-dataset-anonymized.csv` в PostgreSQL и Elasticsearch.
+3. API стартует только после успешного завершения импортёра.
 
 API: `http://localhost:8000`, Swagger UI: `http://localhost:8000/docs`.
-Если порт занят, задайте, например, `API_PORT=8100` в `.env`.
+PostgreSQL, Redis и Elasticsearch снаружи доступны на портах `5432`, `6379` и `9200`.
 
-### FastAPI локально, Elasticsearch через Docker
+Если стандартные порты заняты, задайте свободные только для хоста:
+
+```bash
+API_PORT=8100 POSTGRES_PORT=5433 REDIS_PORT=6380 docker compose up -d --build
+```
+
+Повторная синхронизация CSV:
+
+```bash
+docker compose run --rm importer
+```
+
+Проверка состояния и логов:
+
+```bash
+docker compose ps -a
+docker compose logs importer api
+```
+
+Остановка без удаления данных:
+
+```bash
+docker compose down
+```
+
+### Запуск тестов локально
 
 ```bash
 cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python -m scripts.index_dataset
-uvicorn app.main:app --reload --port 8000
+pytest
 ```
-
-Перед импортом запустите Elasticsearch и подготовьте окружение:
-
-```bash
-cp .env.example .env
-docker compose up -d elasticsearch
-python -m scripts.index_dataset --recreate
-```
-
-Если основной датасет ещё не получен, для smoke-теста используйте:
-
-```bash
-python -m scripts.index_dataset data/sample-contractors.jsonl --recreate
-```
-
-Проверка тестов: `pytest`.
 
 ## Обязательные проверки
 
