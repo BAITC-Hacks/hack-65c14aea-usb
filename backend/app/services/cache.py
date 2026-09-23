@@ -35,7 +35,12 @@ class RecommendationCache(Protocol):
 
 class RedisRecommendationCache:
     def __init__(self, settings: Settings) -> None:
-        self._client = Redis.from_url(settings.redis_url, decode_responses=True)
+        self._client = Redis.from_url(
+            settings.redis_url,
+            decode_responses=True,
+            socket_connect_timeout=settings.cache_request_timeout,
+            socket_timeout=settings.cache_request_timeout,
+        )
         self._ttl = settings.cache_ttl_seconds
 
     async def get(

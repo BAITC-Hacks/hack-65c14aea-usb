@@ -16,6 +16,8 @@ class ElasticsearchContractorRepository:
         self._client = AsyncElasticsearch(
             settings.elasticsearch_url,
             request_timeout=settings.elasticsearch_request_timeout,
+            max_retries=0,
+            retry_on_timeout=False,
         )
 
     async def list_by_city_and_category(

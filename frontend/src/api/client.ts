@@ -25,7 +25,7 @@ async function request<T>(
  acceptedStatuses: number[] = [],
 ): Promise<T> {
  const controller = new AbortController()
- const timeout = setTimeout(() => controller.abort(), 15000)
+ const timeout = setTimeout(() => controller.abort(), 10000)
  try {
     const response = await fetch(base + apiPrefix + path, { ...init, signal: controller.signal })
     if (!response.ok && !acceptedStatuses.includes(response.status)) {

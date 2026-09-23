@@ -1,0 +1,345 @@
+{
+  "profiles": 66,
+  "requests_checked": 30600,
+  "collision_examples": [
+    {
+      "request": {
+        "city": "Алматы",
+        "event_date": "2026-10-09",
+        "event_format": "свадьба",
+        "category": "Ведущий",
+        "budget_kzt": 1000000,
+        "duration_hours": null,
+        "language": null
+      },
+      "items": [
+        {
+          "id": "HK-77838",
+          "name": "Хаул",
+          "categories": [
+            "Ведущий"
+          ],
+          "city": "Алматы",
+          "price_from_kzt": 1000000,
+          "synthetic": false,
+          "explanation": "Свободен 9 октября 2026; стартовая цена точно совпадает с бюджетом. Берёт формат «свадьба»; в описании указано: «Профессиональный ведущий с интеллигентной, располагающей и ненавязчивой подачей»."
+        },
+        {
+          "id": "HK-35215",
+          "name": "Кики",
+          "categories": [
+            "Ведущий"
+          ],
+          "city": "Алматы",
+          "price_from_kzt": 900000,
+          "synthetic": false,
+          "explanation": "Свободен 9 октября 2026; стартовая цена 900 000 ₸ укладывается в бюджет с запасом 100 000 ₸. Берёт формат «свадьба»."
+        },
+        {
+          "id": "HK-42352",
+          "name": "Эмилия",
+          "categories": [
+            "Ведущий"
+          ],
+          "city": "Алматы",
+          "price_from_kzt": 900000,
+          "synthetic": false,
+          "explanation": "Свободен 9 октября 2026; стартовая цена 900 000 ₸ укладывается в бюджет с запасом 100 000 ₸. Берёт формат «свадьба»."
+        }
+      ]
+    },
+    {
+      "request": {
+        "city": "Алматы",
+        "event_date": "2026-10-17",
+        "event_format": "свадьба",
+        "category": "Ведущий",
+        "budget_kzt": 1000000,
+        "duration_hours": null,
+        "language": null
+      },
+      "items": [
+        {
+          "id": "HK-77838",
+          "name": "Хаул",
+          "categories": [
+            "Ведущий"
+          ],
+          "city": "Алматы",
+          "price_from_kzt": 1000000,
+          "synthetic": false,
+          "explanation": "Свободен 17 октября 2026; стартовая цена точно совпадает с бюджетом. Берёт формат «свадьба»; в описании указано: «Профессиональный ведущий с интеллигентной, располагающей и ненавязчивой подачей»."
+        },
+        {
+          "id": "HK-35215",
+          "name": "Кики",
+          "categories": [
+            "Ведущий"
+          ],
+          "city": "Алматы",
+          "price_from_kzt": 900000,
+          "synthetic": false,
+          "explanation": "Свободен 17 октября 2026; стартовая цена 900 000 ₸ укладывается в бюджет с запасом 100 000 ₸. Берёт формат «свадьба»."
+        },
+        {
+          "id": "HK-42352",
+          "name": "Эмилия",
+          "categories": [
+            "Ведущий"
+          ],
+          "city": "Алматы",
+          "price_from_kzt": 900000,
+          "synthetic": false,
+          "explanation": "Свободен 17 октября 2026; стартовая цена 900 000 ₸ укладывается в бюджет с запасом 100 000 ₸. Берёт формат «свадьба»."
+        }
+      ]
+    },
+    {
+      "request": {
+        "city": "Алматы",
+        "event_date": "2026-10-19",
+        "event_format": "свадьба",
+        "category": "Ведущий",
+        "budget_kzt": 1000000,
+        "duration_hours": null,
+        "language": null
+      },
+      "items": [
+        {
+          "id": "HK-77838",
+          "name": "Хаул",
+          "categories": [
+            "Ведущий"
+          ],
+          "city": "Алматы",
+          "price_from_kzt": 1000000,
+          "synthetic": false,
+          "explanation": "Свободен 19 октября 2026; стартовая цена точно совпадает с бюджетом. Берёт формат «свадьба»; в описании указано: «Профессиональный ведущий с интеллигентной, располагающей и ненавязчивой подачей»."
+        },
+        {
+          "id": "HK-35215",
+          "name": "Кики",
+          "categories": [
+            "Ведущий"
+          ],
+          "city": "Алматы",
+          "price_from_kzt": 900000,
+          "synthetic": false,
+          "explanation": "Свободен 19 октября 2026; стартовая цена 900 000 ₸ укладывается в бюджет с запасом 100 000 ₸. Берёт формат «свадьба»."
+        },
+        {
+          "id": "HK-42352",
+          "name": "Эмилия",
+          "categories": [
+            "Ведущий"
+          ],
+          "city": "Алматы",
+          "price_from_kzt": 900000,
+          "synthetic": false,
+          "explanation": "Свободен 19 октября 2026; стартовая цена 900 000 ₸ укладывается в бюджет с запасом 100 000 ₸. Берёт формат «свадьба»."
+        }
+      ]
+    }
+  ],
+  "local_http_ms": {
+    "samples": 500,
+    "median": 2.874799996789079,
+    "p95": 3.9037999958964065,
+    "max": 8.49999999627471
+  },
+  "demos": {
+    "no_eligible_candidates": {
+      "request": {
+        "city": "Алматы",
+        "event_date": "2026-09-23",
+        "event_format": "день рождения",
+        "category": "Банкетный зал",
+        "budget_kzt": 1000000,
+        "duration_hours": null,
+        "language": null
+      },
+      "response": {
+        "status": "no_eligible_candidates",
+        "items": [],
+        "message": "В городе и категории найдено профилей: 7, но подходящих нет: 3 — заняты на выбранную дату; 7 — превышают бюджет; 5 — не берут выбранный формат.",
+        "meta": {
+          "total_in_city_category": 7,
+          "eligible_count": 0,
+          "exclusions": {
+            "busy": 3,
+            "over_budget": 7,
+            "wrong_format": 5,
+            "wrong_language": 0,
+            "insufficient_duration": 0
+          }
+        }
+      }
+    },
+    "matched": {
+      "request": {
+        "city": "Алматы",
+        "event_date": "2026-09-23",
+        "event_format": "день рождения",
+        "category": "Ведущий",
+        "budget_kzt": 1000000,
+        "duration_hours": null,
+        "language": null
+      },
+      "response": {
+        "status": "matched",
+        "items": [
+          {
+            "id": "HK-29829",
+            "name": "Аня Форджер",
+            "categories": [
+              "Ведущий"
+            ],
+            "city": "Алматы",
+            "price_from_kzt": 700000,
+            "synthetic": false,
+            "explanation": "Свободен 23 сентября 2026; стартовая цена 700 000 ₸ укладывается в бюджет с запасом 300 000 ₸. Берёт формат «день рождения»."
+          }
+        ],
+        "message": "Подходящих подрядчиков только 1 из 10: 4 — заняты на выбранную дату; 2 — превышают бюджет; 8 — не берут выбранный формат.",
+        "meta": {
+          "total_in_city_category": 10,
+          "eligible_count": 1,
+          "exclusions": {
+            "busy": 4,
+            "over_budget": 2,
+            "wrong_format": 8,
+            "wrong_language": 0,
+            "insufficient_duration": 0
+          }
+        }
+      }
+    },
+    "dense": {
+      "request": {
+        "city": "Алматы",
+        "event_date": "2026-09-30",
+        "event_format": "конференция",
+        "category": "Ведущий",
+        "budget_kzt": 1000000,
+        "duration_hours": null,
+        "language": null
+      },
+      "response": {
+        "status": "matched",
+        "items": [
+          {
+            "id": "HK-88430",
+            "name": "Куррапика",
+            "categories": [
+              "Ведущий"
+            ],
+            "city": "Алматы",
+            "price_from_kzt": 500000,
+            "synthetic": false,
+            "explanation": "Свободен 30 сентября 2026; стартовая цена 500 000 ₸ укладывается в бюджет с запасом 500 000 ₸. Берёт формат «конференция»; в описании указано: «Я, Куррапика — профессиональный ведущий мероприятий с современным подходом и тонким чувством аудитории»."
+          },
+          {
+            "id": "HK-27222",
+            "name": "Сон Гоку",
+            "categories": [
+              "Ведущий"
+            ],
+            "city": "Алматы",
+            "price_from_kzt": 1000000,
+            "synthetic": false,
+            "explanation": "Свободен 30 сентября 2026; стартовая цена точно совпадает с бюджетом. Берёт формат «конференция»; в описании указано: «Гоку — ведущий, который держит зал, уважает культуру и превращает событие в тёплую, лёгкую и динамичную ист…»."
+          },
+          {
+            "id": "HK-44733",
+            "name": "Буллма",
+            "categories": [
+              "Ведущий"
+            ],
+            "city": "Алматы",
+            "price_from_kzt": 1000000,
+            "synthetic": false,
+            "explanation": "Свободен 30 сентября 2026; стартовая цена точно совпадает с бюджетом. Берёт формат «конференция»; в описании указано: «Ведущий мероприятий с опытом работы более 10 лет»."
+          }
+        ],
+        "message": "Подобраны 3 из 4 подходящих подрядчиков.",
+        "meta": {
+          "total_in_city_category": 10,
+          "eligible_count": 4,
+          "exclusions": {
+            "busy": 1,
+            "over_budget": 2,
+            "wrong_format": 5,
+            "wrong_language": 0,
+            "insufficient_duration": 0
+          }
+        }
+      }
+    },
+    "rare": {
+      "request": {
+        "city": "Алматы",
+        "event_date": "2026-09-23",
+        "event_format": "конференция",
+        "category": "Флорист",
+        "budget_kzt": 1000000,
+        "duration_hours": null,
+        "language": null
+      },
+      "response": {
+        "status": "matched",
+        "items": [
+          {
+            "id": "HK-39372",
+            "name": "Тони Тони Чоппер",
+            "categories": [
+              "Флорист"
+            ],
+            "city": "Алматы",
+            "price_from_kzt": 200000,
+            "synthetic": false,
+            "explanation": "Свободен 23 сентября 2026; стартовая цена 200 000 ₸ укладывается в бюджет с запасом 800 000 ₸. Берёт формат «конференция»."
+          }
+        ],
+        "message": "Подходящих подрядчиков только 1 из 2: 1 — не берут выбранный формат.",
+        "meta": {
+          "total_in_city_category": 2,
+          "eligible_count": 1,
+          "exclusions": {
+            "busy": 0,
+            "over_budget": 0,
+            "wrong_format": 1,
+            "wrong_language": 0,
+            "insufficient_duration": 0
+          }
+        }
+      }
+    },
+    "category_not_found": {
+      "request": {
+        "city": "Астана",
+        "event_date": "2026-09-23",
+        "event_format": "день рождения",
+        "category": "Декоратор",
+        "budget_kzt": 1000000,
+        "duration_hours": null,
+        "language": null
+      },
+      "response": {
+        "status": "category_not_found",
+        "items": [],
+        "message": "В городе «Астана» нет подрядчиков категории «Декоратор».",
+        "meta": {
+          "total_in_city_category": 0,
+          "eligible_count": 0,
+          "exclusions": {
+            "busy": 0,
+            "over_budget": 0,
+            "wrong_format": 0,
+            "wrong_language": 0,
+            "insufficient_duration": 0
+          }
+        }
+      }
+    }
+  }
+}

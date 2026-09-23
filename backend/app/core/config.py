@@ -20,9 +20,10 @@ class Settings(BaseSettings):
     )
     redis_url: str = "redis://localhost:6379/0"
     cache_ttl_seconds: int = 300
+    cache_request_timeout: float = 0.25
     elasticsearch_url: str = "http://localhost:9200"
     elasticsearch_index: str = "contractors-v1"
-    elasticsearch_request_timeout: float = 5.0
+    elasticsearch_request_timeout: float = 4.0
     max_candidates: int = 500
 
     @property

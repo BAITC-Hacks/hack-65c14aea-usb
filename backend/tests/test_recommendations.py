@@ -104,6 +104,37 @@ async def test_explanations_are_specific(repository) -> None:
 
 
 @pytest.mark.asyncio
+async def test_explanations_include_profile_fact_without_query_word_overlap(contractors) -> None:
+    candidates = [
+        contractor.model_copy(
+            update={
+                "id": f"candidate-{index}",
+                "price_from_kzt": 100_000,
+                "description": description,
+            }
+        )
+        for index, (contractor, description) in enumerate(
+            zip(
+                contractors[:2],
+                (
+                    "Репортажная съёмка с передачей фотографий за 7 дней.",
+                    "Студийные портреты и чёрно-белая художественная съёмка.",
+                ),
+                strict=True,
+            )
+        )
+    ]
+    response = await RecommendationService(MemoryContractorRepository(candidates)).recommend(
+        request_for(duration_hours=None, language=None)
+    )
+
+    assert len(response.items) == 2
+    assert len({item.explanation for item in response.items}) == 2
+    assert "Репортажная съёмка" in response.items[0].explanation
+    assert "Студийные портреты" in response.items[1].explanation
+
+
+@pytest.mark.asyncio
 async def test_description_relevance_affects_ranking(contractors) -> None:
     enriched = [
         contractor.model_copy(

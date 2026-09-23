@@ -31,22 +31,34 @@ def description_relevance(
     if request.language:
         query_parts.append(request.language)
     query_tokens = tokenize(" ".join(query_parts))
-    if not query_tokens:
+    sentences = [
+        sentence.strip()
+        for sentence in SENTENCE_RE.split(contractor.description.strip())
+        if sentence.strip()
+    ]
+    if not sentences:
         return 0.0, None
+    if not query_tokens:
+        return 0.0, shorten_sentence(sentences[0])
 
     best_overlap = 0
-    best_sentence: str | None = None
-    for sentence in SENTENCE_RE.split(contractor.description.strip()):
-        sentence = sentence.strip()
+    # Keep a concrete profile fact even when its wording does not overlap with
+    # the request. It makes equally priced candidates distinguishable.
+    best_sentence = sentences[0]
+    for sentence in sentences:
         overlap = len(query_tokens & tokenize(sentence))
         if overlap > best_overlap:
             best_overlap = overlap
             best_sentence = sentence
 
     relevance = best_overlap / len(query_tokens)
-    if best_sentence and len(best_sentence) > 110:
-        best_sentence = best_sentence[:107].rstrip() + "…"
-    return relevance, best_sentence
+    return relevance, shorten_sentence(best_sentence)
+
+
+def shorten_sentence(sentence: str) -> str:
+    if len(sentence) <= 110:
+        return sentence
+    return sentence[:107].rstrip() + "…"
 
 
 def build_explanation(
