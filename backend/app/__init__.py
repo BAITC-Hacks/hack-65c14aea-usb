@@ -1,0 +1,2 @@
+"""Smart Contractor Match backend."""
+
